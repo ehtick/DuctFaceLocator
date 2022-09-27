@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Text>DuctFaceLocator</Text>
+    <Description>Determine duct face and location of all its taps</Description>
+    <Assembly>DuctFaceLocator.dll</Assembly>
+    <FullClassName>DuctFaceLocator.Command</FullClassName>
+    <ClientId>7a7c018b-37fe-4ed2-b408-58d76674e017</ClientId>
+    <VendorId>com.typepad.thebuildingcoder</VendorId>
+    <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
+  </AddIn>
+</RevitAddIns>
