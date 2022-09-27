@@ -15,6 +15,16 @@ namespace DuctFaceLocator
   [Transaction(TransactionMode.Manual)]
   public class Command : IExternalCommand
   {
+    void DetermineInsertionFaceAndLocation( 
+      Connector con,
+      out int iface,
+      out XYZ p )
+    {
+      iface = -1;
+      p = con.Origin;
+      Debug.Print(Util.PointString(p));
+    }
+
     /// <summary>
     /// Analyse a given fabrication part's connectors
     /// </summary>
@@ -28,8 +38,9 @@ namespace DuctFaceLocator
 
       foreach (Connector con in conset)
       {
-        XYZ p = con.Origin;
-        Debug.Print(Util.PointString(p));
+        int iface;
+        XYZ p;
+        DetermineInsertionFaceAndLocation(con, out iface, out p);
       }
     }
 
