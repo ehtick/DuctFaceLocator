@@ -15,6 +15,27 @@ namespace DuctFaceLocator
   [Transaction(TransactionMode.Manual)]
   public class Command : IExternalCommand
   {
+    /// <summary>
+    /// Analyse a given fabrication part's connectors
+    /// </summary>
+    /// <param name="part"></param>
+    void AnalyzeFabricationPart(FabricationPart part)
+    {
+      ConnectorManager conmgr = part.ConnectorManager;
+      ConnectorSet conset = conmgr.Connectors;
+      int n = conset.Size;
+      Debug.Print("{0} connector{1}{2}", n, Util.PluralSuffix(n), Util.DotOrColon(n));
+
+      foreach (Connector con in conset)
+      {
+        XYZ p = con.Origin;
+        Debug.Print(Util.PointString(p));
+      }
+    }
+
+    /// <summary>
+    /// Analyse all selected or pre-selected fabrication parts
+    /// </summary>
     public Result Execute(
       ExternalCommandData commandData,
       ref string message,
@@ -25,31 +46,21 @@ namespace DuctFaceLocator
       Application app = uiapp.Application;
       Document doc = uidoc.Document;
 
-      // Access current selection
+      List<ElementId> ids = new FabricationPartSelector(uidoc).Ids;
 
-      Selection sel = uidoc.Selection;
+      int n = ids.Count;
 
-      // Retrieve elements from database
-
-      FilteredElementCollector col
-        = new FilteredElementCollector(doc)
-          .WhereElementIsNotElementType()
-          .OfCategory(BuiltInCategory.INVALID)
-          .OfClass(typeof(Wall));
-
-      // Filtered element collector is iterable
-
-      foreach (Element e in col)
+      if( 0 == n )
       {
-        Debug.Print(e.Name);
+        return Result.Cancelled;
       }
 
-      // Modify document within a transaction
-
-      using (Transaction tx = new Transaction(doc))
+      foreach (ElementId id in ids)
       {
-        tx.Start("Transaction Name");
-        tx.Commit();
+        FabricationPart part 
+          = doc.GetElement(id) as FabricationPart;
+
+        AnalyzeFabricationPart(part);
       }
 
       return Result.Succeeded;
