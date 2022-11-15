@@ -15,14 +15,162 @@ namespace DuctFaceLocator
   [Transaction(TransactionMode.Manual)]
   public class Command : IExternalCommand
   {
+    /// <summary>
+    /// Return the primary connector 
+    /// from the given connector set.
+    /// </summary>
+    Connector GetPrimaryConnector(ConnectorSet conset)
+    {
+      Connector primary_connector = null;
+      foreach (Connector c in conset)
+      {
+        MEPConnectorInfo info = c.GetMEPConnectorInfo();
+        if (info.IsPrimary)
+        {
+          primary_connector = c;
+          break;
+        }
+      }
+      return primary_connector;
+    }
+
+    /// <summary>
+    /// Return the secondary connector 
+    /// from the given connector set.
+    /// </summary>
+    Connector GetSecondaryConnector(ConnectorSet conset)
+    {
+      Connector secondary_connector = null;
+      foreach (Connector c in conset)
+      {
+        MEPConnectorInfo info = c.GetMEPConnectorInfo();
+        if (info.IsSecondary)
+        {
+          secondary_connector = c;
+          break;
+        }
+      }
+      return secondary_connector;
+    }
+
+    /// <summary>
+    /// Return the first non-primary and non-secondary 
+    /// connector from the given connector manager.
+    /// </summary>
+    Connector GetFirstNonPrimaryOrSecondaryConnector(
+      ConnectorSet conset)
+    {
+      Connector connector = null;
+      foreach (Connector c in conset)
+      {
+        MEPConnectorInfo info = c.GetMEPConnectorInfo();
+        if (!info.IsPrimary && !info.IsSecondary)
+        {
+          connector = c;
+          break;
+        }
+      }
+      return connector;
+    }
+
+    /// <summary>
+    /// Return the primary connector 
+    /// from the given connector manager.
+    /// </summary>
+    Connector GetPrimaryConnector(ConnectorManager cm)
+    {
+      return GetPrimaryConnector(cm.Connectors);
+    }
+
+    /// <summary>
+    /// Return the secondary connector 
+    /// from the given connector manager.
+    /// </summary>
+    Connector GetSecondaryConnector(ConnectorManager cm)
+    {
+      return GetSecondaryConnector(cm.Connectors);
+    }
+
+    /// <summary>
+    /// Return the first non-primary and non-secondary 
+    /// connector from the given connector manager.
+    /// </summary>
+    Connector GetFirstNonPrimaryOrSecondaryConnector(ConnectorManager cm)
+    {
+      return GetFirstNonPrimaryOrSecondaryConnector(cm.Connectors);
+    }
+
+    void f( Document doc, List<ElementId> ids, double dToEnd, double dSpacing )
+    {
+      foreach (ElementId id in ids)
+      {
+        FabricationPart part = doc.GetElement(id) as FabricationPart;
+        ConnectorManager cm = part.ConnectorManager;
+        Connector start = GetPrimaryConnector(cm);
+        Connector end = GetSecondaryConnector(cm);
+        if (null != end)
+        {
+          XYZ ps = start.Origin;
+          XYZ pe = end.Origin;
+          double length = ps.DistanceTo(pe);
+          double d2 = 2 * dToEnd;
+          if (Util.IsEqual(d2, length) || d2 > length)
+          {
+            // No space for two, so place hanger 
+            // in the middle if possible
+
+            try
+            {
+              //FabricationPart.CreateHanger(doc, hanger_button,
+              //  button_condition, id, start, 0.5 * length,
+              //  attach_to_structure);
+            }
+            catch (InvalidOperationException ex)
+            {
+              Debug.Assert(ex.Message.Equals(
+                "Cannot place hanger on the host."),
+                "expected problem placing hanger on host");
+            }
+          }
+          else
+          {
+            // Place start and middle hangers
+
+            double t = dToEnd;
+            double dEnd = length - dToEnd;
+            while (t < dEnd || Util.IsEqual(t, dEnd))
+            {
+              //FabricationPart.CreateHanger(doc, hanger_button,
+              //  button_condition, id, start, t,
+              //  attach_to_structure);
+
+              t += dSpacing;
+            }
+
+            // Place end hanger
+
+            //FabricationPart.CreateHanger(doc, hanger_button,
+            //  button_condition, id, end, dToEnd,
+            //  attach_to_structure);
+          }
+        }
+      }
+
+    }
+
     void DetermineInsertionFaceAndLocation( 
+      int index,
       Connector con,
       out int iface,
       out XYZ p )
     {
+      p = null;
       iface = -1;
-      p = con.Origin;
-      Debug.Print(Util.PointString(p));
+      if (ConnectorType.Physical == con.ConnectorType)
+      {
+        p = con.Origin;
+        Debug.Print("{0}: {1}", index, Util.PointString(p));
+      }
     }
 
     /// <summary>
@@ -36,11 +184,30 @@ namespace DuctFaceLocator
       int n = conset.Size;
       Debug.Print("{0} connector{1}{2}", n, Util.PluralSuffix(n), Util.DotOrColon(n));
 
-      foreach (Connector con in conset)
+      Connector start = GetPrimaryConnector(conset);
+      Connector end = GetSecondaryConnector(conset);
+
+      if (null != end)
       {
-        int iface;
-        XYZ p;
-        DetermineInsertionFaceAndLocation(con, out iface, out p);
+        XYZ ps = start.Origin;
+        XYZ pe = end.Origin;
+        XYZ v = pe - ps;
+
+        // Transfrom from local duct to world coordinate system
+
+        Transform twcs = start.CoordinateSystem; 
+        Debug.Assert(Util.IsParallel(v, twcs.BasisZ), "expected start connector aligned with end connector" );
+
+        double length = ps.DistanceTo(pe);
+
+        int i = 0;
+
+        foreach (Connector con in conset)
+        {
+          int iface;
+          XYZ p;
+          DetermineInsertionFaceAndLocation(i++, con, out iface, out p);
+        }
       }
     }
 
@@ -78,3 +245,7 @@ namespace DuctFaceLocator
     }
   }
 }
+
+// what is the  meaning of GetFabricationConnectorInfo.FabricationIndex?
+// -1 means thast it's a tap, apparently
+

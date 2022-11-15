@@ -5,6 +5,135 @@ namespace DuctFaceLocator
 {
   class Util
   {
+    #region Geometrical Comparison
+    public const double _eps = 1.0e-9;
+
+    public static double Eps
+    {
+      get
+      {
+        return _eps;
+      }
+    }
+
+    public static double MinLineLength
+    {
+      get
+      {
+        return _eps;
+      }
+    }
+
+    public static double TolPointOnPlane
+    {
+      get
+      {
+        return _eps;
+      }
+    }
+
+    public static bool IsZero(
+      double a,
+      double tolerance = _eps)
+    {
+      return tolerance > Math.Abs(a);
+    }
+
+    public static bool IsEqual(
+      double a,
+      double b,
+      double tolerance = _eps)
+    {
+      return IsZero(b - a, tolerance);
+    }
+
+    /// <summary>
+    ///     Comparison method for two real numbers
+    ///     returning 0 if they are to be considered equal,
+    ///     -1 if the first is smaller and +1 otherwise
+    /// </summary>
+    public static int Compare(
+        double a,
+        double b,
+        double tolerance = _eps)
+    {
+      return IsEqual(a, b, tolerance)
+          ? 0
+          : a < b
+              ? -1
+              : 1;
+    }
+
+    /// <summary>
+    ///     Comparison method for two XYZ objects
+    ///     returning 0 if they are to be considered equal,
+    ///     -1 if the first is smaller and +1 otherwise
+    /// </summary>
+    public static int Compare(
+        XYZ p,
+        XYZ q,
+        double tolerance = _eps)
+    {
+      var d = Compare(p.X, q.X, tolerance);
+
+      if (0 == d)
+      {
+        d = Compare(p.Y, q.Y, tolerance);
+
+        if (0 == d) d = Compare(p.Z, q.Z, tolerance);
+      }
+
+      return d;
+    }
+
+    /// <summary>
+    ///     Predicate to test whether two points or
+    ///     vectors can be considered equal with the
+    ///     given tolerance.
+    /// </summary>
+    public static bool IsEqual(
+        XYZ p,
+        XYZ q,
+        double tolerance = _eps)
+    {
+      return 0 == Compare(p, q, tolerance);
+    }
+
+
+    /// <summary>
+    ///     Return true if the vectors v and w
+    ///     are non-zero and perpendicular.
+    /// </summary>
+    private bool IsPerpendicular(XYZ v, XYZ w)
+    {
+      var a = v.GetLength();
+      var b = v.GetLength();
+      var c = Math.Abs(v.DotProduct(w));
+      return _eps < a
+             && _eps < b
+             && _eps > c;
+      // c * c < _eps * a * b
+    }
+
+    /// <summary>
+    ///     Return true if the vectors p and Q are parallel, 
+    ///     or at least one of them is zero length.
+    /// </summary>
+    public static bool IsParallel(XYZ p, XYZ q)
+    {
+      return p.CrossProduct(q).IsZeroLength();
+    }
+
+    /// <summary>
+    ///     Predicate returning true if three given points are collinear
+    /// </summary>
+    public static bool AreCollinear(XYZ p, XYZ q, XYZ r)
+    {
+      var v = q - p;
+      var w = r - p;
+      return IsParallel(v, w);
+    }
+    #endregion // Geometrical Comparison
 
     #region Unit Handling
 
