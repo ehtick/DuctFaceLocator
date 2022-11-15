@@ -198,6 +198,8 @@ namespace DuctFaceLocator
         XYZ pe = end.Origin;
         XYZ v = (pe - ps).Normalize();
 
+        Debug.Print("duct {0} --> {1}", Util.PointStringMm(ps), Util.PointStringMm(pe));
+
         // Transform from local duct to world coordinate system
 
         Transform twcs = start.CoordinateSystem;
@@ -234,12 +236,13 @@ namespace DuctFaceLocator
             if (!info.IsPrimary && !info.IsSecondary)
             {
               int iface;
-              XYZ pwcs = c.Origin;
+              XYZ pcwcs = c.Origin; // on duct centre line curve
+              XYZ pwcs = c.CoordinateSystem.Origin;
               XYZ plcs = tlcs.OfPoint(pwcs);
               v = plcs - pslcs;
               //XYZ w = tlcs.OfVector(v);
               //Debug.Print("");
-              Debug.Print("{0}: {1} {2} {3}", i, Util.PointStringMm(pwcs), Util.PointStringMm(plcs), Util.PointStringMm(v));
+              Debug.Print("{0}: {1} {2} {3} {4}", i, Util.PointStringMm(pcwcs), Util.PointStringMm(pwcs), Util.PointStringMm(plcs), Util.PointStringMm(v));
 
               //DetermineInsertionFaceAndLocation(t, i, c, out iface, out p);
             }
