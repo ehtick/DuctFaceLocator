@@ -151,6 +151,31 @@ namespace DuctFaceLocator
       return length * _footToMm;
     }
 
+    /// <summary>
+    ///     Convert a given UV vector in feet to millimetres.
+    /// </summary>
+    public static UV FootToMm(UV v)
+    {
+      return v * _footToMm;
+    }
+
+    /// <summary>
+    ///     Convert a given XYZ vector in feet to millimetres.
+    /// </summary>
+    public static XYZ FootToMm(XYZ v)
+    {
+      return v * _footToMm;
+    }
+
+    /// <summary>
+    ///     Convert a given length in feet to millimetres,
+    ///     rounded to the closest millimetre.
+    /// </summary>
+    public static int FootToMmInt(double length)
+    {
+      return (int)Math.Round(_footToMm * length,
+          MidpointRounding.AwayFromZero);
+    }
     #endregion // Unit Handling
 
     #region Formatting
@@ -246,6 +271,24 @@ namespace DuctFaceLocator
           RealString(p.X),
           RealString(p.Y),
           RealString(p.Z));
+    }
+
+    /// <summary>
+    ///     Return a string in millimetres
+    ///     for an XYZ point or vector in feet.
+    /// </summary>
+    public static string PointStringMm(
+        XYZ p,
+        bool onlySpaceSeparator = false)
+    {
+      var format_string = onlySpaceSeparator
+          ? "{0} {1} {2}"
+          : "({0},{1},{2})";
+
+      return string.Format(format_string,
+          FootToMmInt(p.X),
+          FootToMmInt(p.Y),
+          FootToMmInt(p.Z));
     }
 
     #endregion // Formatting

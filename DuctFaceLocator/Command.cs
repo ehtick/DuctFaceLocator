@@ -182,31 +182,68 @@ namespace DuctFaceLocator
       ConnectorManager conmgr = part.ConnectorManager;
       ConnectorSet conset = conmgr.Connectors;
       int n = conset.Size;
-      Debug.Print("{0} connector{1}{2}", n, Util.PluralSuffix(n), Util.DotOrColon(n));
 
-      Connector start = GetPrimaryConnector(conset);
-      Connector end = GetSecondaryConnector(conset);
-
-      if (null != end)
+      if(3 > n)
       {
+        Debug.Print("only one or two connectors");
+      }
+      else
+      {
+        Debug.Print("{0} connector{1}", n, Util.PluralSuffix(n), Util.DotOrColon(n));
+
+        Connector start = GetPrimaryConnector(conset);
+        Connector end = GetSecondaryConnector(conset);
+
         XYZ ps = start.Origin;
         XYZ pe = end.Origin;
-        XYZ v = pe - ps;
+        XYZ v = (pe - ps).Normalize();
 
-        // Transfrom from local duct to world coordinate system
+        // Transform from local duct to world coordinate system
 
-        Transform twcs = start.CoordinateSystem; 
-        Debug.Assert(Util.IsParallel(v, twcs.BasisZ), "expected start connector aligned with end connector" );
+        Transform twcs = start.CoordinateSystem;
+        Debug.Assert(Util.IsEqual(1, twcs.Determinant), "expected start connector unity transform");
+        //Debug.Assert(Util.IsParallel(v, twcs.BasisZ), "expected start connector aligned with end connector");
 
-        double length = ps.DistanceTo(pe);
+        // Flip so that Z axis points into duct, not out of it
 
-        int i = 0;
+        twcs.BasisY = -(twcs.BasisY);
+        twcs.BasisZ = -(twcs.BasisZ);
+        //Debug.Assert(Util.IsEqual(v, twcs.BasisZ), "expected start connector aligned with end connector");
 
-        foreach (Connector con in conset)
+        if(!Util.IsEqual(v, twcs.BasisZ))
         {
-          int iface;
-          XYZ p;
-          DetermineInsertionFaceAndLocation(i++, con, out iface, out p);
+          Debug.Print( "start connector does not align with end connector");
+        }
+        else
+        {
+          int w = Util.FootToMmInt(start.Width);
+          int h = Util.FootToMmInt(start.Height);
+
+          // Transform from world to local duct coordinate system
+
+          Transform tlcs = twcs.Inverse;
+          XYZ pslcs = tlcs.OfPoint(ps);
+          Debug.Assert(Util.IsEqual(pslcs, XYZ.Zero));
+
+          int i = -1;
+
+          foreach (Connector c in conset)
+          {
+            ++i;
+            MEPConnectorInfo info = c.GetMEPConnectorInfo();
+            if (!info.IsPrimary && !info.IsSecondary)
+            {
+              int iface;
+              XYZ pwcs = c.Origin;
+              XYZ plcs = tlcs.OfPoint(pwcs);
+              v = plcs - pslcs;
+              //XYZ w = tlcs.OfVector(v);
+              //Debug.Print("");
+              Debug.Print("{0}: {1} {2} {3}", i, Util.PointStringMm(pwcs), Util.PointStringMm(plcs), Util.PointStringMm(v));
+
+              //DetermineInsertionFaceAndLocation(t, i, c, out iface, out p);
+            }
+          }
         }
       }
     }
