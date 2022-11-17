@@ -15,6 +15,9 @@ namespace DuctFaceLocator
   [Transaction(TransactionMode.Manual)]
   public class Command : IExternalCommand
   {
+    /*
+     */
+    
     /// <summary>
     /// Return the primary connector 
     /// from the given connector set.
@@ -176,7 +179,6 @@ namespace DuctFaceLocator
     /// <summary>
     /// Analyse a given fabrication part's connectors
     /// </summary>
-    /// <param name="part"></param>
     void AnalyzeFabricationPart(FabricationPart part)
     {
       ConnectorManager conmgr = part.ConnectorManager;
@@ -204,23 +206,31 @@ namespace DuctFaceLocator
 
         Transform twcs = start.CoordinateSystem;
         Debug.Assert(Util.IsEqual(1, twcs.Determinant), "expected start connector unity transform");
-        //Debug.Assert(Util.IsParallel(v, twcs.BasisZ), "expected start connector aligned with end connector");
 
         // Flip so that Z axis points into duct, not out of it
 
         twcs.BasisY = -(twcs.BasisY);
         twcs.BasisZ = -(twcs.BasisZ);
-        //Debug.Assert(Util.IsEqual(v, twcs.BasisZ), "expected start connector aligned with end connector");
 
-        if(!Util.IsEqual(v, twcs.BasisZ))
+        // Duct width, height and orientation
+
+        int dw = Util.FootToMmInt(start.Width);
+        int dh = Util.FootToMmInt(start.Height);
+
+        XYZ vw = twcs.BasisX;
+        XYZ vh = twcs.BasisY;
+
+        Debug.Print("Duct LCS: p {0} w {1} {2} h {3} {4} z {5}",
+          Util.PointStringMm(ps),
+          dw, Util.PointStringInt(vw), dh, Util.PointStringInt(vh),
+          Util.PointStringInt(twcs.BasisZ));
+
+        if (!Util.IsEqual(v, twcs.BasisZ))
         {
           Debug.Print( "start connector does not align with end connector");
         }
         else
         {
-          int w = Util.FootToMmInt(start.Width);
-          int h = Util.FootToMmInt(start.Height);
-
           // Transform from world to local duct coordinate system
 
           Transform tlcs = twcs.Inverse;
@@ -236,15 +246,19 @@ namespace DuctFaceLocator
             if (!info.IsPrimary && !info.IsSecondary)
             {
               int iface;
-              XYZ pcwcs = c.Origin; // on duct centre line curve
-              XYZ pwcs = c.CoordinateSystem.Origin;
+              Transform tx = c.CoordinateSystem;
+              //XYZ pcwcs = c.Origin; // on duct centre line curve
+              XYZ pwcs = tx.Origin;
+              XYZ vzwcs = tx.BasisZ;
+              //Debug.Assert(Util.IsEqual(vzwcs, vw) || Util.IsEqual(vzwcs, vh),
+              //  "expected tap location in w or h direction");
               XYZ plcs = tlcs.OfPoint(pwcs);
+              XYZ vzlcs = tlcs.OfVector(vzwcs);
               v = plcs - pslcs;
-              //XYZ w = tlcs.OfVector(v);
-              //Debug.Print("");
-              Debug.Print("{0}: {1} {2} {3} {4}", i, Util.PointStringMm(pcwcs), Util.PointStringMm(pwcs), Util.PointStringMm(plcs), Util.PointStringMm(v));
-
-              //DetermineInsertionFaceAndLocation(t, i, c, out iface, out p);
+              Debug.Print("{0}: {1}+{2} {3}+{4} {5}", i,
+                Util.PointStringMm(pwcs), Util.PointStringInt(vzwcs),
+                Util.PointStringMm(plcs), Util.PointStringInt(vzlcs), 
+                Util.PointStringInt(v));
             }
           }
         }

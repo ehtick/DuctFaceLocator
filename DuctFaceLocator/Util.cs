@@ -168,13 +168,21 @@ namespace DuctFaceLocator
     }
 
     /// <summary>
+    ///     Round a real number to the closest int.
+    /// </summary>
+    public static int ToInt(double x)
+    {
+      return (int)Math.Round(x,
+          MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
     ///     Convert a given length in feet to millimetres,
     ///     rounded to the closest millimetre.
     /// </summary>
     public static int FootToMmInt(double length)
     {
-      return (int)Math.Round(_footToMm * length,
-          MidpointRounding.AwayFromZero);
+      return ToInt(_footToMm * length);
     }
     #endregion // Unit Handling
 
@@ -291,6 +299,22 @@ namespace DuctFaceLocator
           FootToMmInt(p.Z));
     }
 
+    /// <summary>
+    ///     Return a string for an XYZ point
+    ///     or vector with its coordinates
+    ///     formatted to zero decimal places.
+    /// </summary>
+    public static string PointStringInt(
+        XYZ p,
+        bool onlySpaceSeparator = false)
+    {
+      var format_string = onlySpaceSeparator
+          ? "{0} {1} {2}"
+          : "({0},{1},{2})";
+
+      return string.Format(format_string,
+          ToInt(p.X), ToInt(p.Y), ToInt(p.Z));
+    }
     #endregion // Formatting
   }
 }
