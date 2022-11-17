@@ -191,16 +191,14 @@ namespace DuctFaceLocator
       }
       else
       {
-        Debug.Print("{0} connector{1}", n, Util.PluralSuffix(n), Util.DotOrColon(n));
-
         Connector start = GetPrimaryConnector(conset);
         Connector end = GetSecondaryConnector(conset);
 
         XYZ ps = start.Origin;
         XYZ pe = end.Origin;
-        XYZ v = (pe - ps).Normalize();
-
-        Debug.Print("duct {0} --> {1}", Util.PointStringMm(ps), Util.PointStringMm(pe));
+        XYZ vz = pe - ps;
+        double length = vz.GetLength();
+        vz = vz.Normalize();
 
         // Transform from local duct to world coordinate system
 
@@ -220,12 +218,15 @@ namespace DuctFaceLocator
         XYZ vw = twcs.BasisX;
         XYZ vh = twcs.BasisY;
 
-        Debug.Print("Duct LCS: p {0} w {1} {2} h {3} {4} z {5}",
-          Util.PointStringMm(ps),
-          dw, Util.PointStringInt(vw), dh, Util.PointStringInt(vh),
-          Util.PointStringInt(twcs.BasisZ));
+        Debug.Print("duct {0} --> {1} w {2} {3} h {4} {5} z {6} {7}",
+          Util.PointStringMm(ps), Util.PointStringMm(pe),
+          dw, Util.PointStringInt(vw), 
+          dh, Util.PointStringInt(vh),
+          Util.FootToMmInt(length), Util.PointStringInt(vz));
 
-        if (!Util.IsEqual(v, twcs.BasisZ))
+        Debug.Print("{0} connector{1}", n, Util.PluralSuffix(n), Util.DotOrColon(n));
+
+        if (!Util.IsEqual(vz, twcs.BasisZ))
         {
           Debug.Print( "start connector does not align with end connector");
         }
@@ -254,11 +255,11 @@ namespace DuctFaceLocator
               //  "expected tap location in w or h direction");
               XYZ plcs = tlcs.OfPoint(pwcs);
               XYZ vzlcs = tlcs.OfVector(vzwcs);
-              v = plcs - pslcs;
-              Debug.Print("{0}: {1}+{2} {3}+{4} {5}", i,
+              XYZ vd = plcs - pslcs;
+              Debug.Print("{0}: {1}+{2} {3}+{4} vd {5}", i,
                 Util.PointStringMm(pwcs), Util.PointStringInt(vzwcs),
-                Util.PointStringMm(plcs), Util.PointStringInt(vzlcs), 
-                Util.PointStringInt(v));
+                Util.PointStringMm(plcs), Util.PointStringInt(vzlcs),
+                Util.PointStringInt(vd));
             }
           }
         }
