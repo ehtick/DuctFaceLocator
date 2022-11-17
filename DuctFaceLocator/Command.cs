@@ -15,9 +15,32 @@ namespace DuctFaceLocator
   [Transaction(TransactionMode.Manual)]
   public class Command : IExternalCommand
   {
+    /// <summary>
+    /// Get the connected connector of one connector
+    /// </summary>
+    /// <param name="connector">The connector to be analysed</param>
+    /// <returns>The connected connector</returns>
+    static Connector GetConnectedConnector(Connector connector)
+    {
+      Connector connectedConnector = null;
+      ConnectorSet allRefs = connector.AllRefs;
+      foreach (Connector c in allRefs)
+      {
+        // Ignore non-EndConn connectors and connectors of the current element
+        if (c.ConnectorType != ConnectorType.End 
+          || c.Owner.Id == connector.Owner.Id)
+        {
+          continue;
+        }
+        connectedConnector = c;
+        break;
+      }
+      return connectedConnector;
+    }
+
     /*
      */
-    
+
     /// <summary>
     /// Return the primary connector 
     /// from the given connector set.
@@ -244,23 +267,36 @@ namespace DuctFaceLocator
           {
             ++i;
             MEPConnectorInfo info = c.GetMEPConnectorInfo();
-            if (!info.IsPrimary && !info.IsSecondary)
-            {
-              int iface;
-              Transform tx = c.CoordinateSystem;
-              //XYZ pcwcs = c.Origin; // on duct centre line curve
-              XYZ pwcs = tx.Origin;
-              XYZ vzwcs = tx.BasisZ;
-              //Debug.Assert(Util.IsEqual(vzwcs, vw) || Util.IsEqual(vzwcs, vh),
-              //  "expected tap location in w or h direction");
-              XYZ plcs = tlcs.OfPoint(pwcs);
-              XYZ vzlcs = tlcs.OfVector(vzwcs);
-              XYZ vd = plcs - pslcs;
-              Debug.Print("{0}: {1}+{2} {3}+{4} vd {5}", i,
-                Util.PointStringMm(pwcs), Util.PointStringInt(vzwcs),
-                Util.PointStringMm(plcs), Util.PointStringInt(vzlcs),
-                Util.PointStringInt(vd));
-            }
+            string psx = info.IsPrimary ? "P" : (info.IsSecondary ? "S" : "X");
+            int iface;
+            Transform tx = c.CoordinateSystem;
+            //XYZ pcwcs = c.Origin; // on duct centre line curve
+            XYZ pwcs = tx.Origin;
+            XYZ vzwcs = tx.BasisZ;
+            //Debug.Assert(Util.IsEqual(vzwcs, vw) || Util.IsEqual(vzwcs, vh),
+            //  "expected tap location in w or h direction");
+            XYZ plcs = tlcs.OfPoint(pwcs);
+            XYZ vzlcs = tlcs.OfVector(vzwcs);
+            XYZ vd = plcs - pslcs;
+            Debug.Print("{0} {1}: {2}+{3} {4}+{5} vd {6}", i, psx,
+              Util.PointStringMm(pwcs), Util.PointStringInt(vzwcs),
+              Util.PointStringMm(plcs), Util.PointStringInt(vzlcs),
+              Util.PointStringMm(vd));
+
+            // Connector location is on duct centre line, not 
+            // on a face, so we cannot use that. Conoector Z
+            // direction does not points along the duct centre
+            // line, not to a face, so we cannot use that.
+
+            // Third attempt: find the connected connector 
+            // and use its origin.
+
+            Connector c2 = GetConnectedConnector(c);
+            XYZ p2w = c2.Origin;
+            XYZ p2l = tlcs.OfPoint(p2w);
+            XYZ v2d = p2l - pslcs;
+            Debug.Print("connected to {0} {1} {2}", Util.PointStringMm(p2w), 
+              Util.PointStringMm(p2l), Util.PointStringMm(v2d));
           }
         }
       }
