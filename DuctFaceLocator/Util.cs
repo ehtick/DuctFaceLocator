@@ -315,6 +315,42 @@ namespace DuctFaceLocator
       return string.Format(format_string,
           ToInt(p.X), ToInt(p.Y), ToInt(p.Z));
     }
+
+    /// <summary>
+    ///     Return a string describing the given element:
+    ///     .NET type name,
+    ///     category name,
+    ///     family and symbol name for a family instance,
+    ///     element id and element name.
+    /// </summary>
+    public static string ElementDescription(
+        Element e)
+    {
+      if (null == e) return "<null>";
+
+      // For a wall, the element name equals the
+      // wall type name, which is equivalent to the
+      // family name ...
+
+      var fi = e as FamilyInstance;
+
+      var typeName = e.GetType().Name;
+
+      var categoryName = null == e.Category
+          ? string.Empty
+          : $"{e.Category.Name} ";
+
+      var familyName = null == fi
+          ? string.Empty
+          : $"{fi.Symbol.Family.Name} ";
+
+      var symbolName = null == fi
+                       || e.Name.Equals(fi.Symbol.Name)
+          ? string.Empty
+          : $"{fi.Symbol.Name} ";
+
+      return $"{typeName} {categoryName}{familyName}{symbolName}<{e.Id.IntegerValue} {e.Name}>";
+    }
     #endregion // Formatting
   }
 }

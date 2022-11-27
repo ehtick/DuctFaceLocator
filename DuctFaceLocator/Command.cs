@@ -210,7 +210,8 @@ namespace DuctFaceLocator
 
       if(3 > n)
       {
-        Debug.Print("only one or two connectors");
+        Debug.Print("{0} has only one or two connectors", 
+          Util.ElementDescription(part));
       }
       else
       {
@@ -250,14 +251,17 @@ namespace DuctFaceLocator
         XYZ vw = twcs.BasisX;
         XYZ vh = twcs.BasisY;
 
-        Debug.Print("duct {0} --> {1} {2} w {3} {4} h {5} {6} z {7} {8}",
-          Util.PointStringMm(ps), Util.PointStringMm(pe),
-          shape.ToString()[0],
+        Debug.Print("{0} at {1} --> {2} {3} "
+          + "w {4} {5} h {6} {7} z {8} {9} "
+          + "has {10} connector{11}{12}",
+          Util.ElementDescription(part),
+          Util.PointStringMm(ps), 
+          Util.PointStringMm(pe),
+          shape.ToString(),
           dw, Util.PointStringInt(vw), 
           dh, Util.PointStringInt(vh),
-          Util.FootToMmInt(length), Util.PointStringInt(vz));
-
-        Debug.Print("{0} connector{1}", n, Util.PluralSuffix(n), Util.DotOrColon(n));
+          Util.FootToMmInt(length), Util.PointStringInt(vz),
+          n, Util.PluralSuffix(n), Util.DotOrColon(n));
 
         if (!Util.IsEqual(vz, twcs.BasisZ))
         {
@@ -265,6 +269,8 @@ namespace DuctFaceLocator
         }
         else
         {
+          string condesc = "<empty>";
+
           // Transform from world to local duct coordinate system
 
           Transform tlcs = twcs.Inverse;
@@ -276,44 +282,55 @@ namespace DuctFaceLocator
           foreach (Connector c in conset)
           {
             ++i;
-            MEPConnectorInfo info = c.GetMEPConnectorInfo();
-            string psx = info.IsPrimary ? "P" : (info.IsSecondary ? "S" : "X");
-            int iface;
-            Transform tx = c.CoordinateSystem;
-            //XYZ pcwcs = c.Origin; // on duct centre line curve
-            XYZ pwcs = tx.Origin;
-            XYZ vzwcs = tx.BasisZ;
-            //Debug.Assert(Util.IsEqual(vzwcs, vw) || Util.IsEqual(vzwcs, vh),
-            //  "expected tap location in w or h direction");
-            XYZ plcs = tlcs.OfPoint(pwcs);
-            XYZ vzlcs = tlcs.OfVector(vzwcs);
-            XYZ vd = plcs - pslcs;
-            Debug.Print("{0} {1}: {2}+{3} {4}+{5} vd {6}", i, psx,
-              Util.PointStringMm(pwcs), Util.PointStringInt(vzwcs),
-              Util.PointStringMm(plcs), Util.PointStringInt(vzlcs),
-              Util.PointStringMm(vd));
-
-            // Connector location is on duct centre line, not 
-            // on a face, so we cannot use that. Conoector Z
-            // direction does not points along the duct centre
-            // line, not to a face, so we cannot use that.
-
-            // Third attempt: find the connected connector 
-            // and use its origin.
-
-            Connector c2 = GetConnectedConnector(c);
-            string c2data = "<null>";
-            if( null != c2 )
+            ConnectorType ctyp = c.ConnectorType;
+            if (ConnectorType.Physical != ctyp)
             {
-              XYZ p2w = c2.Origin;
-              XYZ p2l = tlcs.OfPoint(p2w);
-              XYZ v2d = p2l - pslcs;
-
-              c2data = string.Format("{0} {1} {2}", Util.PointStringMm(p2w),
-                Util.PointStringMm(p2l), Util.PointStringMm(v2d));
+              condesc = string.Format("{0} {1}", i, ctyp.ToString());
             }
-            Debug.Print("connected to " + c2data );
+            else
+            {
+              MEPConnectorInfo info = c.GetMEPConnectorInfo();
+              string psx = info.IsPrimary ? "P" : (info.IsSecondary ? "S" : "X");
+              int iface;
+              Transform tx = c.CoordinateSystem;
+              //XYZ pcwcs = c.Origin; // on duct centre line curve
+              XYZ pwcs = tx.Origin;
+              XYZ vzwcs = tx.BasisZ;
+              //Debug.Assert(Util.IsEqual(vzwcs, vw) || Util.IsEqual(vzwcs, vh),
+              //  "expected tap location in w or h direction");
+              XYZ plcs = tlcs.OfPoint(pwcs);
+              XYZ vzlcs = tlcs.OfVector(vzwcs);
+              XYZ vd = plcs - pslcs;
+              condesc = string.Format(
+                "{0} {1} {2}: {3}+{4} {5}+{6} vd {7}", 
+                i, psx, ctyp.ToString(),
+                Util.PointStringMm(pwcs), Util.PointStringInt(vzwcs),
+                Util.PointStringMm(plcs), Util.PointStringInt(vzlcs),
+                Util.PointStringMm(vd));
+
+              // Connector location is on duct centre line, not 
+              // on a face, so we cannot use that. Conoector Z
+              // direction does not points along the duct centre
+              // line, not to a face, so we cannot use that.
+
+              // Third attempt: find the connected connector 
+              // and use its origin.
+
+              Connector c2 = GetConnectedConnector(c);
+              string c2data = "<null>";
+              if (null != c2)
+              {
+                XYZ p2w = c2.Origin;
+                XYZ p2l = tlcs.OfPoint(p2w);
+                XYZ v2d = p2l - pslcs;
+
+                c2data = string.Format("{0} {1} {2}", Util.PointStringMm(p2w),
+                  Util.PointStringMm(p2l), Util.PointStringMm(v2d));
+              }
+              condesc += "connected to " + c2data;
+            }
           }
+          Debug.Print(condesc);
         }
       }
     }
