@@ -329,8 +329,8 @@ namespace DuctFaceLocator
               }
               condesc += "connected to " + c2data;
             }
+            Debug.Print(condesc);
           }
-          Debug.Print(condesc);
         }
       }
     }
