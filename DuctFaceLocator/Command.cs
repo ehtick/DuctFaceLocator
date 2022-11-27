@@ -292,11 +292,17 @@ namespace DuctFaceLocator
             // and use its origin.
 
             Connector c2 = GetConnectedConnector(c);
-            XYZ p2w = c2.Origin;
-            XYZ p2l = tlcs.OfPoint(p2w);
-            XYZ v2d = p2l - pslcs;
-            Debug.Print("connected to {0} {1} {2}", Util.PointStringMm(p2w), 
-              Util.PointStringMm(p2l), Util.PointStringMm(v2d));
+            string c2data = "<null>";
+            if( null != c2 )
+            {
+              XYZ p2w = c2.Origin;
+              XYZ p2l = tlcs.OfPoint(p2w);
+              XYZ v2d = p2l - pslcs;
+
+              c2data = string.Format("{0} {1} {2}", Util.PointStringMm(p2w),
+                Util.PointStringMm(p2l), Util.PointStringMm(v2d));
+            }
+            Debug.Print("connected to " + c2data );
           }
         }
       }
