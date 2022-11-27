@@ -235,14 +235,24 @@ namespace DuctFaceLocator
 
         // Duct width, height and orientation
 
-        int dw = Util.FootToMmInt(start.Width);
-        int dh = Util.FootToMmInt(start.Height);
+        ConnectorProfileType shape = start.Shape;
+        int dw = 0, dh = 0;
+        if(ConnectorProfileType.Round == shape)
+        {
+          dw = dh = Util.FootToMmInt(start.Radius);
+        }
+        else if(ConnectorProfileType.Rectangular == shape)
+        {
+          dw = Util.FootToMmInt(start.Width);
+          dh = Util.FootToMmInt(start.Height);
+        }
 
         XYZ vw = twcs.BasisX;
         XYZ vh = twcs.BasisY;
 
-        Debug.Print("duct {0} --> {1} w {2} {3} h {4} {5} z {6} {7}",
+        Debug.Print("duct {0} --> {1} {2} w {3} {4} h {5} {6} z {7} {8}",
           Util.PointStringMm(ps), Util.PointStringMm(pe),
+          shape.ToString()[0],
           dw, Util.PointStringInt(vw), 
           dh, Util.PointStringInt(vh),
           Util.FootToMmInt(length), Util.PointStringInt(vz));
