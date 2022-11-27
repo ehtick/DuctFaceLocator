@@ -283,7 +283,8 @@ namespace DuctFaceLocator
           {
             ++i;
             ConnectorType ctyp = c.ConnectorType;
-            if (ConnectorType.Physical != ctyp)
+            if (ConnectorType.Curve != ctyp
+              && ConnectorType.End != ctyp )
             {
               condesc = string.Format("{0} {1}", i, ctyp.ToString());
             }
