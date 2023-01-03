@@ -7,6 +7,7 @@ using Autodesk.Revit.UI.Selection;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 
 #endregion
 
@@ -37,9 +38,6 @@ namespace DuctFaceLocator
       }
       return connectedConnector;
     }
-
-    /*
-     */
 
     /// <summary>
     /// Return the primary connector 
@@ -210,8 +208,8 @@ namespace DuctFaceLocator
 
       if(3 > n)
       {
-        Debug.Print("{0} has only one or two connectors", 
-          Util.ElementDescription(part));
+        Debug.Print("duct <{0}> has only one or two connectors",
+          part.Id.IntegerValue /*Util.ElementDescription(part)*/ );
       }
       else
       {
@@ -251,10 +249,10 @@ namespace DuctFaceLocator
         XYZ vw = twcs.BasisX;
         XYZ vh = twcs.BasisY;
 
-        Debug.Print("{0} at {1} --> {2} {3} "
+        Debug.Print("duct <{0}> at {1} --> {2} {3} "
           + "w {4} {5} h {6} {7} z {8} {9} "
           + "has {10} connector{11}{12}",
-          Util.ElementDescription(part),
+          part.Id.IntegerValue /*Util.ElementDescription(part)*/,
           Util.PointStringMm(ps), 
           Util.PointStringMm(pe),
           shape.ToString(),
