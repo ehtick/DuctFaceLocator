@@ -198,9 +198,10 @@ namespace DuctFaceLocator
     }
 
     /// <summary>
-    /// Analyse a given fabrication part's connectors
+    /// Analyse a given rectangular duct fabrication part's 
+    /// side face connectors
     /// </summary>
-    void AnalyzeFabricationPart(FabricationPart part)
+    void AnalyzeDuctFaceConnectors(FabricationPart part)
     {
       ConnectorManager conmgr = part.ConnectorManager;
       ConnectorSet conset = conmgr.Connectors;
@@ -335,7 +336,8 @@ namespace DuctFaceLocator
     }
 
     /// <summary>
-    /// Analyse all selected or pre-selected fabrication parts
+    /// Analyse all pre- or post-selected 
+    /// fabrication part duct faces
     /// </summary>
     public Result Execute(
       ExternalCommandData commandData,
@@ -361,7 +363,7 @@ namespace DuctFaceLocator
         FabricationPart part 
           = doc.GetElement(id) as FabricationPart;
 
-        AnalyzeFabricationPart(part);
+        AnalyzeDuctFaceConnectors(part);
       }
 
       return Result.Succeeded;
