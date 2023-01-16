@@ -199,13 +199,16 @@ namespace DuctFaceLocator
 
     /// <summary>
     /// Analyse a given rectangular duct fabrication part's 
-    /// side face connectors
+    /// side face connectors. Return false if it has none.
     /// </summary>
-    void AnalyzeDuctFaceConnectors(FabricationPart part)
+    bool AnalyzeDuctFaceConnectors(
+      List<string> report,
+      FabricationPart part)
     {
       ConnectorManager conmgr = part.ConnectorManager;
       ConnectorSet conset = conmgr.Connectors;
       int n = conset.Size;
+      bool rc = false;
 
       if(3 > n)
       {
@@ -237,6 +240,7 @@ namespace DuctFaceLocator
 
         ConnectorProfileType shape = start.Shape;
         int dw = 0, dh = 0;
+        bool isRect = false;
         if(ConnectorProfileType.Round == shape)
         {
           dw = dh = Util.FootToMmInt(start.Radius);
@@ -245,6 +249,7 @@ namespace DuctFaceLocator
         {
           dw = Util.FootToMmInt(start.Width);
           dh = Util.FootToMmInt(start.Height);
+          isRect = true;
         }
 
         XYZ vw = twcs.BasisX;
@@ -291,7 +296,7 @@ namespace DuctFaceLocator
             {
               MEPConnectorInfo info = c.GetMEPConnectorInfo();
               string psx = info.IsPrimary ? "P" : (info.IsSecondary ? "S" : "X");
-              int iface;
+              //int iface;
               Transform tx = c.CoordinateSystem;
               //XYZ pcwcs = c.Origin; // on duct centre line curve
               XYZ pwcs = tx.Origin;
@@ -309,9 +314,9 @@ namespace DuctFaceLocator
                 Util.PointStringMm(vd));
 
               // Connector location is on duct centre line, not 
-              // on a face, so we cannot use that. Conoector Z
-              // direction does not points along the duct centre
-              // line, not to a face, so we cannot use that.
+              // on a face, so we cannot use that. Connector Z
+              // direction points along the duct centre line,
+              // not to a face, so we cannot use that either.
 
               // Third attempt: find the connected connector 
               // and use its origin.
@@ -326,13 +331,23 @@ namespace DuctFaceLocator
 
                 c2data = string.Format("{0} {1} {2}", Util.PointStringMm(p2w),
                   Util.PointStringMm(p2l), Util.PointStringMm(v2d));
+
+                if (isRect)
+                {
+                  Debug.Assert(ConnectorProfileType.Round == c2.Shape,
+                    "expected round tap");
+                  int radius = Util.FootToMmInt(c2.Radius);
+                  report.Add(string.Format(
+                    $"Tap radius {radius} at {Util.PointStringMm(v2d)}"));
+                }
               }
-              condesc += "connected to " + c2data;
+              condesc += " connected to " + c2data;
             }
             Debug.Print(condesc);
           }
         }
       }
+      return rc;
     }
 
     /// <summary>
@@ -358,13 +373,26 @@ namespace DuctFaceLocator
         return Result.Cancelled;
       }
 
+      int nDuctFaceParts = 0;
+      int nNonDuctFaceParts = 0;
+      List<string> report = new List<string>();
+
       foreach (ElementId id in ids)
       {
         FabricationPart part 
           = doc.GetElement(id) as FabricationPart;
 
-        AnalyzeDuctFaceConnectors(part);
+        if(AnalyzeDuctFaceConnectors(report, part))
+        {
+          ++nDuctFaceParts;
+        }
+        else
+        {
+          ++nNonDuctFaceParts;
+        }
       }
+
+      Util.InfoMsg3($"{nDuctFaceParts} have face connectors, {nNonDuctFaceParts} do not:", report);
 
       return Result.Succeeded;
     }

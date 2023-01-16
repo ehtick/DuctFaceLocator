@@ -1,5 +1,9 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace DuctFaceLocator
 {
@@ -350,6 +354,20 @@ namespace DuctFaceLocator
           : $"{fi.Symbol.Name} ";
 
       return $"{typeName} {categoryName}{familyName}{symbolName}<{e.Id.IntegerValue} {e.Name}>";
+    }
+
+    private const string _caption = "DuctFaceLocator";
+
+    public static void InfoMsg3(
+        string instruction,
+        IList<string> content)
+    {
+      string s = string.Join("\r\n", content);
+      Debug.WriteLine($"{instruction}\r\n{s}");
+      var d = new TaskDialog(_caption);
+      d.MainInstruction = instruction;
+      d.MainContent = s;
+      d.Show();
     }
     #endregion // Formatting
   }
