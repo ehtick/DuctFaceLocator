@@ -242,17 +242,17 @@ namespace DuctFaceLocator
         XYZ vw = twcs.BasisX;
         XYZ vh = twcs.BasisY;
 
-        Debug.Print("duct <{0}> at {1} --> {2} {3} "
-          + "vw {4} vh {5} z {6} {7} "
-          + "has {8} connector{9}{10}",
+        string duct_description = string.Format(
+          "Duct <{0}> at {1} --> {2} {3} "
+          + "vw {4} vh {5} length {6} {7}",
           part.Id.IntegerValue /*Util.ElementDescription(part)*/,
-          Util.PointStringMm(ps), 
-          Util.PointStringMm(pe),
+          Util.PointStringMm(ps), Util.PointStringMm(pe),
           xsecdim.ToString(),
-          Util.PointStringInt(vw), 
-          Util.PointStringInt(vh),
-          Util.FootToMmInt(length), Util.PointStringInt(vz),
-          n, Util.PluralSuffix(n), Util.DotOrColon(n));
+          Util.PointStringInt(vw), Util.PointStringInt(vh),
+          Util.FootToMmInt(length), Util.PointStringInt(vz));
+
+        Debug.Print(duct_description 
+          + $" has {n} connector{Util.PluralSuffix(n)}{Util.DotOrColon(n)}");
 
         if (!Util.IsEqual(vz, twcs.BasisZ))
         {
@@ -322,9 +322,14 @@ namespace DuctFaceLocator
                 if (xsecdim.IsRect 
                   && !(Util.IsZero(v2d.X) && Util.IsZero(v2d.Y)))
                 {
+                  if( null != duct_description)
+                  {
+                    report.Add(duct_description + ":");
+                    duct_description = null;
+                  }
                   XsecDimMm xsecdim2 = new XsecDimMm(c2);
                   report.Add(string.Format(
-                    $"Tap {xsecdim2} at {Util.PointStringMm(v2d)}"));
+                    $"  tap {xsecdim2} at {Util.PointStringMm(v2d)}"));
                 }
               }
               condesc += " connected to " + c2data;
