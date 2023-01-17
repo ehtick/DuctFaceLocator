@@ -238,32 +238,19 @@ namespace DuctFaceLocator
 
         // Duct width, height and orientation
 
-        ConnectorProfileType shape = start.Shape;
-        int dw = 0, dh = 0;
-        bool isRect = false;
-        if(ConnectorProfileType.Round == shape)
-        {
-          dw = dh = Util.FootToMmInt(start.Radius);
-        }
-        else if(ConnectorProfileType.Rectangular == shape)
-        {
-          dw = Util.FootToMmInt(start.Width);
-          dh = Util.FootToMmInt(start.Height);
-          isRect = true;
-        }
-
+        XsecDimMm xsecdim = new XsecDimMm(start);
         XYZ vw = twcs.BasisX;
         XYZ vh = twcs.BasisY;
 
         Debug.Print("duct <{0}> at {1} --> {2} {3} "
-          + "w {4} {5} h {6} {7} z {8} {9} "
+          + "vw {4} vh {5} z {8} {9} "
           + "has {10} connector{11}{12}",
           part.Id.IntegerValue /*Util.ElementDescription(part)*/,
           Util.PointStringMm(ps), 
           Util.PointStringMm(pe),
-          shape.ToString(),
-          dw, Util.PointStringInt(vw), 
-          dh, Util.PointStringInt(vh),
+          xsecdim.ToString(),
+          Util.PointStringInt(vw), 
+          Util.PointStringInt(vh),
           Util.FootToMmInt(length), Util.PointStringInt(vz),
           n, Util.PluralSuffix(n), Util.DotOrColon(n));
 
@@ -332,7 +319,7 @@ namespace DuctFaceLocator
                 c2data = string.Format("{0} {1} {2}", Util.PointStringMm(p2w),
                   Util.PointStringMm(p2l), Util.PointStringMm(v2d));
 
-                if (isRect)
+                if (xsecdim.IsRect)
                 {
                   Debug.Assert(ConnectorProfileType.Round == c2.Shape,
                     "expected round tap");

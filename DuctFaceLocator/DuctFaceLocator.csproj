@@ -56,6 +56,7 @@
     <Compile Include="FabricationPartSelector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />
+    <Compile Include="XsecDimMm.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="DuctFaceLocator.addin" />
