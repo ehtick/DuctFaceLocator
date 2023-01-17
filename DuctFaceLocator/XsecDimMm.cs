@@ -43,7 +43,7 @@ namespace DuctFaceLocator
         Width = Util.FootToMmInt(con.Width);
         Height = Util.FootToMmInt(con.Height);
       }
-      else if (ConnectorProfileType.Rectangular == Shape)
+      else if (ConnectorProfileType.Round == Shape)
       {
         Width = Util.FootToMmInt(con.Radius);
       }

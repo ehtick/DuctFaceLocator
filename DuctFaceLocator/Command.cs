@@ -243,8 +243,8 @@ namespace DuctFaceLocator
         XYZ vh = twcs.BasisY;
 
         Debug.Print("duct <{0}> at {1} --> {2} {3} "
-          + "vw {4} vh {5} z {8} {9} "
-          + "has {10} connector{11}{12}",
+          + "vw {4} vh {5} z {6} {7} "
+          + "has {8} connector{9}{10}",
           part.Id.IntegerValue /*Util.ElementDescription(part)*/,
           Util.PointStringMm(ps), 
           Util.PointStringMm(pe),
@@ -319,13 +319,12 @@ namespace DuctFaceLocator
                 c2data = string.Format("{0} {1} {2}", Util.PointStringMm(p2w),
                   Util.PointStringMm(p2l), Util.PointStringMm(v2d));
 
-                if (xsecdim.IsRect)
+                if (xsecdim.IsRect 
+                  && !(Util.IsZero(v2d.X) && Util.IsZero(v2d.Y)))
                 {
-                  Debug.Assert(ConnectorProfileType.Round == c2.Shape,
-                    "expected round tap");
-                  int radius = Util.FootToMmInt(c2.Radius);
+                  XsecDimMm xsecdim2 = new XsecDimMm(c2);
                   report.Add(string.Format(
-                    $"Tap radius {radius} at {Util.PointStringMm(v2d)}"));
+                    $"Tap {xsecdim2} at {Util.PointStringMm(v2d)}"));
                 }
               }
               condesc += " connected to " + c2data;
@@ -378,8 +377,10 @@ namespace DuctFaceLocator
           ++nNonDuctFaceParts;
         }
       }
+      string s = $"{nDuctFaceParts + nNonDuctFaceParts} parts, "
+        + $"{nDuctFaceParts} with face connectors, {nNonDuctFaceParts} without:";
 
-      Util.InfoMsg3($"{nDuctFaceParts} have face connectors, {nNonDuctFaceParts} do not:", report);
+      Util.InfoMsg3(s, report);
 
       return Result.Succeeded;
     }
